@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+    db:
+        container_name: mongo_db
+        image: mongo
+        env_file:
+            - .env
+        restart: always
+        ports:
+            - "${MONGODB_PORT}:${MONGODB_PORT}"
+        networks:
+            - mongo-compose-network
+        volumes:
+            - mongo_db:/data/db
+    mongo-express:
+        container_name: mongo_express
+        image: mongo-express
+        env_file:
+            - .env
+        environment:
+            - ME_CONFIG_MONGODB_SERVER=mongo_db
+        depends_on:
+            - db
+        restart: always
+        ports:
+            - "${MONGO_EXPRESS_PORT}:${MONGO_EXPRESS_PORT}"
+        networks:
+            - mongo-compose-network
+        volumes:
+            - mongo_db:/data/db
+    server:
+        container_name: server
+        env_file:
+            - .env
+        environment:
+            - MONGODB_HOST=mongo_db
+        depends_on:
+            - db
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        restart: always
+        ports:
+            - "${SERVER_PORT}:${SERVER_PORT}"
+        networks:
+            - mongo-compose-network
+networks:
+    mongo-compose-network:
+        driver: bridge
+volumes:
+    mongo_db:
